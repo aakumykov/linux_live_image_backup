@@ -8,6 +8,8 @@ if [ 1 -ne $# ]; then
 	exit 1
 fi
 
+SWAP_LOG="log/swap"
+
 show_as_error(){ 
 	echo $* > /dev/stderr 
 }
@@ -16,8 +18,14 @@ kill_if_runs(){
 	ps -p $1 > /dev/null && kill $1 
 }
 
+log_swap(){
+	cat > $SWAP_LOG | buffer
+}
+
 restore_swap(){
-	IFS=: read INDEX UUID && mkswap -U $UUID ${TARGET_DRIVE}${INDEX} > output/swap_info | buffer 
+	echo "=============== restoring swap (start) ==============" | log_swap
+	IFS=: read INDEX UUID && mkswap -U $UUID ${TARGET_DRIVE}${INDEX} | log_swap
+	echo "=============== restoring swap (finish) ==============" | log_swap
 }
 
 TARGET_DRIVE=$1
@@ -47,5 +55,5 @@ cat /dev/stdin > archive
 #kill_if_runs $BOOT_PID
 
 sleep 3
-cat output/swap_info
+cat $SWAP_LOG
 
