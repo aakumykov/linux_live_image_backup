@@ -17,7 +17,7 @@ kill_if_runs(){
 }
 
 restore_swap(){
-	IFS=: read INDEX UUID && mkswap -U $UUID ${TARGET_DRIVE}${INDEX} > output/swap_info | buffer 
+	IFS=: read INDEX UUID && mkswap -U $UUID ${TARGET_DRIVE}${INDEX} > log/swap | buffer 
 }
 
 TARGET_DRIVE=$1
@@ -47,5 +47,5 @@ cat /dev/stdin > archive
 #kill_if_runs $BOOT_PID
 
 sleep 3
-cat output/swap_info
+cat log/swap
 
