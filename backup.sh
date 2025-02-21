@@ -1,10 +1,10 @@
 #!/bin/bash
 set -e
 
-if [ 2 -ne $# ]; then
+if [ 1 -ne $# ]; then
 	cat <<- EOF > /dev/stderr
-	Usage: $0 <hdd> <archive file>
-	Example: $0 /dev/sda /mnt/config.zip
+	Usage: $0 <hdd> > /path/to/archive.zip
+	Example: $0 /dev/sda > /mnt/config.zip
 	EOF
 	exit 1
 fi
@@ -57,10 +57,6 @@ DISK=$1
 shift
 show_as_error DISK: $DISK
 
-
-ARCHIVE=$1
-shift
-show_as_error ARCHIVE: $ARCHIVE
 
 
 SWAP_EXISTS=false
@@ -118,14 +114,15 @@ else
 fi
 
 
-zip -FI -r - . > $ARCHIVE
+zip -FI -r - . > /dev/stdout
 
-show_as_error `ls -lh $ARCHIVE`
+kill_if_runs(){
+	ps -p $1 > /dev/null && kill $1
+}
 
-
-kill $BOOT_PID
-if [ $SWAP_EXISTS = true ]; then kill $SWAP_PID; fi
-kill $SFDISK_PID
+kill_if_runs $BOOT_PID
+if [ $SWAP_EXISTS = true ]; then kill_if_runs $SWAP_PID; fi
+kill_if_runs $SFDISK_PID
 
 
 cd -
