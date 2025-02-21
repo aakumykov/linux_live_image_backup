@@ -24,7 +24,7 @@ cat disks/sfdisk_dump | buffer | bsdtar -xf- -O sfdisk_dump | (sfdisk $TARGET_DR
 SFDISK_PID=$!
 
 # TODO: использовать отдельную команду с проверкой на наличие раздела
-cat disks/swap_info | bsdtar -xf- -O swap_info | (sleep 2 && IFS=: read INDEX UUID && mkswap -U $UUID ${TARGET_DRIVE}${INDEX}) &
+cat disks/swap_info | bsdtar -xf- -O swap_info | (sleep 2 && IFS=: read INDEX UUID && mkswap -U $UUID ${TARGET_DRIVE}${INDEX} > output/swap_info | buffer ) &
 SWAP_PID=$!
 
 cat disks/boot_rec | bsdtar -xf- -O boot_rec | (dd of=$TARGET_DRIVE bs=440 count=1) &
@@ -42,4 +42,7 @@ cat /dev/stdin > archive
 #kill_if_runs $SFDISK_PID
 #kil_if_runs $SWAP_PID
 #kill_if_runs $BOOT_PID
+
+sleep 3
+cat output/swap_info
 
