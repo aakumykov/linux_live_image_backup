@@ -1,5 +1,20 @@
 #!/bin/bash
 
+if [ $# -lt 2 ]; then
+	cat <<- EOF
+	Usage: $0 <disk> <create|remove|list>
+	Example: $0 /dev/sda create
+	EOF
+	exit 1
+fi
+
+DISK=$1
+shift
+
+CMD=$1
+shift
+
+
 show_usage_and_exit(){
 	echo "Usage: $0 <create|remove|list>" > /dev/stderr
 	exit 1
@@ -17,9 +32,6 @@ show_error_and_exit(){
 	echo "$*" > /dev/stderr
 	exit 1
 }
-
-
-CMD=$1
 
 
 #
@@ -40,7 +52,7 @@ OLD_IFS=$IFS
 IFS=$'\n'
 set -f # Disable globbing.
 
-for i in `mount | grep /dev/sda | sort`; do
+for i in `mount | grep $DISK | sort`; do
 	P=`field_of "$i" ' ' 1`
 	N=`echo $P | grep -Eo '[0-9]+$'`
 	M=`field_of "$i" ' ' 3`
