@@ -16,29 +16,57 @@ kill_if_runs(){
 	ps -p $1 > /dev/null && kill $1 
 }
 
+SWAP_LOG=swap.log
+
 restore_swap(){
-	IFS=: read INDEX UUID && mkswap -U $UUID ${TARGET_DRIVE}${INDEX} > log/swap | buffer 
+	IFS=: read INDEX UUID && mkswap -U $UUID ${TARGET_DRIVE}${INDEX} > $SWAP_LOG | buffer 
 }
+
+TEMP_DIR=`mktemp -d`
+show_as_error "TEMP_DIR: $TEMP_DIR"
+
+cd $TEMP_DIR
+show_as_error "WORKING DIR: `pwd`"
+
+SFDISK_NAME='sfdisk_dump'
+SWAP_NAME='swap_info'
+BOOT_NAME='boot_rec'
+COMMON_NAME='archive'
+
+SFDISK_PIPE="$TEMP_DIR/$SFDISK_NAME"
+SWAP_PIPE="$TEMP_DIR/$SWAP_NAME"
+BOOT_PIPE="$TEMP_DIR/$BOOT_NAME"
+COMMON_PIPE="$TEMP_DIR/$COMMON_NAME"
+
+prepare_pipes(){
+	mkfifo $COMMON_PIPE
+	mkfifo $BOOT_PIPE
+	mkfifo $SWAP_PIPE
+	mkfifo $SFDISK_PIPE
+}
+
+prepare_pipes
 
 TARGET_DRIVE=$1
 show_as_error TARGET_DRIVE: $TARGET_DRIVE
 
-cat disks/sfdisk_dump | buffer | bsdtar -xf- -O sfdisk_dump | (sfdisk $TARGET_DRIVE) &
+
+cat $SFDISK_PIPE | buffer | bsdtar -xf- -O $SFDISK_NAME | (sfdisk $TARGET_DRIVE) &
 SFDISK_PID=$!
 
 # TODO: использовать отдельную команду с проверкой на наличие раздела
-cat disks/swap_info | bsdtar -xf- -O swap_info | (sleep 2 && restore_swap) &
+cat $SWAP_PIPE | bsdtar -xf- -O $SWAP_NAME | (sleep 2 && restore_swap) &
 SWAP_PID=$!
 
-cat disks/boot_rec | bsdtar -xf- -O boot_rec | (dd of=$TARGET_DRIVE bs=440 count=1) &
+cat $BOOT_PIPE | bsdtar -xf- -O $BOOT_NAME | (dd of=$TARGET_DRIVE bs=440 count=1) &
 BOOT_PID=$!
 
-cat archive | tee disks/sfdisk_dump | tee disks/swap_info | tee disks/boot_rec > /dev/null &
+cat $COMMON_PIPE | tee $SFDISK_PIPE | tee $SWAP_PIPE | tee $BOOT_PIPE > /dev/null &
 #cat archive | tee disks/sfdisk_dump | tee disks/boot_rec > /dev/null &
 #cat archive | tee disks/sfdisk_dump > /dev/null &
 TEE_PID=$!
 
-cat /dev/stdin > archive 
+cat /dev/stdin > $COMMON_PIPE
 
 # sleep 3
 #kill_if_runs $TEE_PID
@@ -47,5 +75,5 @@ cat /dev/stdin > archive
 #kill_if_runs $BOOT_PID
 
 sleep 3
-cat log/swap
+cat $SWAP_LOG
 
