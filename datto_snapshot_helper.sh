@@ -41,21 +41,21 @@ IFS=$'\n'
 set -f # Disable globbing.
 
 for i in `mount | grep /dev/sda | sort`; do
-	P=`field_of "$i" ' ' 1`
-	N=`echo $P | grep -Eo '[0-9]+$'`
-	M=`field_of "$i" ' ' 3`
-	F=`field_of "$i" ' ' 5`
+	PART_FILE=`field_of "$i" ' ' 1`
+	PART_NUM=`echo $PART_FILE | grep -Eo '[0-9]+$'`
+	MOUNT_POINT=`field_of "$i" ' ' 3`
+	FILE_SYSTEM=`field_of "$i" ' ' 5`
 
 
 	case $CMD in
 		create)
-			dbdctl setup-snapshot $P $M/.datto$N $N
+			dbdctl setup-snapshot $PART_FILE $MOUNT_POINT/.datto$PART_NUM $PART_NUM
 			;;
 		remove)
-			dbdctl destroy $N
+			dbdctl destroy $PART_NUM
 			;;
 		list)
-			ls -l /dev/datto$N
+			ls -l /dev/datto$PART_NUM
 			;;
 		*)
 			show_usage_and_exit
