@@ -33,6 +33,11 @@ swap_info(){
 	echo `swap_index`:`swap_uuid`
 }
 
+part_names(){
+	all_blkids_of_working_disk | \grep -E ' UUID=' | \grep -vi swap | cut -d: -f1 | \grep -Eo '[^/]+$'
+}
+
+
 sfdisk_with_write_command(){
 cat << EOF
 `sfdisk -d $1`
@@ -73,6 +78,11 @@ mkfifo $BOOT_PIPE
 show_as_error BOOT_PIPE: $BOOT_PIPE
 
 
+LIST_PIPE=$TEMP_DIR/part_list
+mkfifo $LIST_PIPE
+show_as_error LIST_PIPE: $LIST_PIPE
+
+
 if [ $SWAP_EXISTS = true ]
 then
 	SWAP_PIPE=$TEMP_DIR/swap_info
@@ -86,6 +96,11 @@ fi
 SFDISK_PIPE=$TEMP_DIR/sfdisk_dump
 mkfifo $SFDISK_PIPE
 show_as_error SFDISK_PIPE: $SFDISK_PIPE
+
+
+part_names > $LIST_PIPE &
+LIST_PID=$!
+show_as_error LIST_PID: $LIST_PID
 
 
 sfdisk_with_write_command $DISK > $SFDISK_PIPE &
