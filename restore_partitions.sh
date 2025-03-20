@@ -22,7 +22,18 @@ TARGET_DISK=$1
 shift
 echo TARGET DISK: $TARGET_DISK
 
-WORK_DIR=`mktemp -d`
-echo WORK_DIR: $WORK_DIR
+WORK_DIR='/tmp/linux_image_restore'
+[ ! -d $WORK_DIR ] && show_as_error_and_exit "Directory '$WORK_DIR' not found. Are you run partitions structure restoring script first?"
 
+
+part_names(){
+	local PART_LIST_FILE=$WORK_DIR/part_list
+	if [ -f $PART_LIST_FILE ]; then
+		cat $PART_LIST_FILE
+	else
+		show_as_error_and_exit "There is no '$PART_LIST_FILE', cannot get list of partitions!"
+	fi
+}
+
+part_names
 

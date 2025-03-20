@@ -22,7 +22,13 @@ restore_swap(){
 	IFS=: read INDEX UUID && mkswap -U $UUID ${TARGET_DRIVE}${INDEX} > $SWAP_LOG | buffer 
 }
 
-TEMP_DIR=`mktemp -d`
+TEMP_DIR='/tmp/linux_image_restore'
+if [ -d $TEMP_DIR ]; then
+	show_as_error Dir $TEMP_DIR already exists, removing its content...
+	rm $TEMP_DIR/* -rf
+else
+	mkdir $TEMP_DIR
+fi
 show_as_error "TEMP_DIR: $TEMP_DIR"
 
 cd $TEMP_DIR
