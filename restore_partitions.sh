@@ -42,6 +42,9 @@ source_disk_name(){
 	source_partitions | head -1 | grep -Eo '[^/]+$' | grep -Eo '[^0-9]+'
 }
 
+SOURCE_DISK_NAME=`source_disk_name`
+echo SOURCE_DISK_NAME: $SOURCE_DISK_NAME
+
 part_nums(){
 	source_partitions | grep -Eo [0-9]+
 }
@@ -52,8 +55,6 @@ source_partitions
 echo Part nums:
 part_nums
 
-echo Source disk name:
-source_disk_name
 
 
 COMMON_PIPE=$WORK_DIR/archive
@@ -61,7 +62,7 @@ COMMON_PIPE=$WORK_DIR/archive
 
 prepare_pipes(){
 	for n in `part_nums`; do
-		local PIPE_NAME=$WORK_DIR/${TARGET_DISK_NAME}${n}
+		local PIPE_NAME=$WORK_DIR/${SOURCE_DISK_NAME}${n}
 		[ ! -e $PIPE_NAME ] && mkfifo $PIPE_NAME
 		ls -l $PIPE_NAME
 	done
@@ -69,4 +70,56 @@ prepare_pipes(){
 
 prepare_pipes
 
+
+#
+# Проверка целевого диска
+#
+check_target_parts(){
+	for n in `part_nums`; do
+		local TARGET_PART=/dev/${TARGET_DISK_NAME}$n
+		[ ! -b $TARGET_PART ] && show_as_error_and_exit "There is no target partition '$TARGET_PART' or it is not block device!"
+	done
+}
+
+check_target_parts
+
+
+#
+# Собственно восстановление:
+#
+prepare_passing_data_from_common_to_specific_pipes(){
+	local TEE_CMD="cat $COMMON_PIPE "
+	for n in `part_nums`; do
+		local PIPE_NAME=$WORK_DIR/${SOURCE_DISK_NAME}$n
+		TEE_CMD+=" | tee $PIPE_NAME"
+	done
+	TEE_CMD+=" > /dev/null"
+	
+	echo $TEE_CMD
+	eval $TEE_CMD &
+}
+
+prepare_passing_data_from_common_to_specific_pipes
+
+
+prepare_passing_data_from_specific_pipes_to_target_parts(){
+	for n in `part_nums`; do
+		local SOURCE_PART_NAME="${SOURCE_DISK_NAME}${n}"
+		local TARGET_PART_NAME=${TARGET_DISK_NAME}${n}
+		local TARGET_PARTITION=/dev/$TARGET_PART_NAME
+		local PIPE_NAME=$WORK_DIR/${SOURCE_PART_NAME}
+
+		local CMD="dd if=$PIPE_NAME bs=1M | bsdtar -xf- -O $SOURCE_PART_NAME > $TARGET_PARTITION"
+
+		echo $CMD
+		eval $CMD &
+	done
+}
+
+prepare_passing_data_from_specific_pipes_to_target_parts
+
+echo "Passing archive data to ${COMMON_PIPE} ..."
+START_CMD="cat /dev/stdin > $COMMON_PIPE"
+echo $START_CMD
+eval $START_CMD
 
