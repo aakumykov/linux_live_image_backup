@@ -34,11 +34,15 @@ show_as_error "TEMP_DIR: $TEMP_DIR"
 cd $TEMP_DIR
 show_as_error "WORKING DIR: `pwd`"
 
+LIST_NAME='part_list'
 SFDISK_NAME='sfdisk_dump'
 SWAP_NAME='swap_info'
 BOOT_NAME='boot_rec'
 COMMON_NAME='archive'
 
+LIST_FILE=$TEMP_DIR/${LIST_NAME}.txt
+
+LIST_PIPE="$TEMP_DIR/$LIST_NAME"
 SFDISK_PIPE="$TEMP_DIR/$SFDISK_NAME"
 SWAP_PIPE="$TEMP_DIR/$SWAP_NAME"
 BOOT_PIPE="$TEMP_DIR/$BOOT_NAME"
@@ -49,6 +53,7 @@ prepare_pipes(){
 	mkfifo $BOOT_PIPE
 	mkfifo $SWAP_PIPE
 	mkfifo $SFDISK_PIPE
+	mkfifo $LIST_PIPE
 }
 
 prepare_pipes
@@ -67,7 +72,9 @@ SWAP_PID=$!
 cat $BOOT_PIPE | bsdtar -xf- -O $BOOT_NAME | (dd of=$TARGET_DRIVE bs=440 count=1) &
 BOOT_PID=$!
 
-cat $COMMON_PIPE | tee $SFDISK_PIPE | tee $SWAP_PIPE | tee $BOOT_PIPE > /dev/null &
+cat $LIST_PIPE | bsdtar -xf- -O $LIST_NAME > $LIST_FILE &
+
+cat $COMMON_PIPE | tee $SFDISK_PIPE | tee $SWAP_PIPE | tee $BOOT_PIPE | tee $LIST_PIPE > /dev/null &
 #cat archive | tee disks/sfdisk_dump | tee disks/boot_rec > /dev/null &
 #cat archive | tee disks/sfdisk_dump > /dev/null &
 TEE_PID=$!
@@ -81,5 +88,10 @@ cat /dev/stdin > $COMMON_PIPE
 #kill_if_runs $BOOT_PID
 
 sleep 3
+
+show_as_error ================ SWAP_LOG =================
 cat $SWAP_LOG
+
+show_as_error ================ PART_LIST =================
+cat $LIST_FILE
 
