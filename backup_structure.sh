@@ -10,7 +10,7 @@ if [ 1 -ne $# ]; then
 fi
 
 show_as_error(){
-	echo $*
+	echo $* > /dev/stderr
 }
 
 all_blkids_of_working_disk(){
