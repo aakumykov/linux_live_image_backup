@@ -50,13 +50,18 @@ for i in `mount | grep /dev/sda | sort`; do
 	MOUNT_POINT=`field_of "$i" ' ' 3`
 	FILE_SYSTEM=`field_of "$i" ' ' 5`
 
+	DEVICE="/dev/datto${PART_NUM}"
 
 	case $CMD in
 		create)
+			show_as_error "Creating '$DEVICE'"
 			dbdctl setup-snapshot $PART_FILE $MOUNT_POINT/.datto$PART_NUM $PART_NUM
 			;;
 		remove)
-			dbdctl destroy $PART_NUM
+			[ -b $DEVICE ] && { 
+				show_as_error "Removing '$DEVICE'"
+				dbdctl destroy $PART_NUM 
+			}
 			;;
 		list)
 			ls -l /dev/datto$PART_NUM
