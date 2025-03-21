@@ -1,7 +1,11 @@
 #!/bin/bash
 
+show_as_error(){
+	echo $* > /dev/stderr
+}
+
 show_usage_and_exit(){
-	echo "Usage: $0 <create|remove|list>" > /dev/stderr
+	show_as_error "Usage: $0 <create|remove|list>"
 	exit 1
 }
 
@@ -14,7 +18,7 @@ some_snapshots_exists(){
 }
 
 show_error_and_exit(){
-	echo "$*" > /dev/stderr
+	show_as_error "$*"
 	exit 1
 }
 
