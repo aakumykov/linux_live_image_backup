@@ -116,7 +116,8 @@ then
 	show_as_error SWAP_PID: $SWAP_PID
 fi
 
-dd if=$DISK bs=440 count=1 of=$BOOT_PIPE &
+
+dd if=$DISK bs=440 count=1 of=$BOOT_PIPE 2>/dev/null &
 BOOT_PID=$!
 show_as_error BOOT_PID: $BOOT_PID
 
@@ -129,7 +130,7 @@ else
 fi
 
 
-zip -FI -r - . > /dev/stdout
+zip -q -FI -r - . > /dev/stdout
 
 kill_if_runs(){
 	ps -p $1 > /dev/null && kill $1
