@@ -9,6 +9,7 @@ if [ $# -lt 1 ]; then
 	exit 1
 fi
 
+
 DISK=$1
 shift
 
@@ -17,10 +18,31 @@ show_as_error(){
 	echo "$*" > /dev/stderr
 }
 
+
 show_as_error_and_exit(){
 	show_as_error "$*"
 	exit 1
 }
+
+
+SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
+show_as_error SCRIPT_DIR: $SCRIPT_DIR
+
+DATTO_HELPER="$SCRIPT_DIR/datto_snapshot_helper.sh"
+
+check_required_commands(){
+	# Dattobd
+	which dbdctl || show_as_error_and_exit "Command 'dbdctl' not found! You must install it firsrt on backuped system (https://github.com/datto/dattobd)."
+	# Datto snapshot helper
+	[ -e $DATTO_HELPER ] || show_as_error_and_exit "Command '$DATTO_HELPER' not found or not executable!"
+	# Zip
+	which zip || show_as_error_and_exit "Command 'zip' not found!"
+}
+
+
+check_required_commands
+
+
 
 check_disk_is_correct(){
 	if [ ! -e $DISK ]; then
@@ -74,8 +96,11 @@ prepare_pipes
 #
 # Сделать этот скрипт реагирующим на аргумент
 #
-./datto_snapshot_helper.sh remove
-./datto_snapshot_helper.sh create
+show_as_error "Removing old Dattobd devices if exits..."
+$DATTO_HELPER remove
+
+show_as_error "Creating Dattobd snapshot devices..."
+$DATTO_HELPER create
 
 
 prepare_dumps(){
@@ -88,7 +113,12 @@ prepare_dumps(){
 prepare_dumps
 
 cd $TEMP_DIR
-show_as_error "CURRENT_DIR: `pwd`"
+show_as_error "WORKING_DIR: `pwd`"
 
+show_as_error "Zipping partitions data..."
 zip -q -FI -r - . > /dev/stdout
 
+
+show_as_error "Removing /dev/datto* devices..."
+$DATTO_HELPER remove
+show_as_error "Done"
