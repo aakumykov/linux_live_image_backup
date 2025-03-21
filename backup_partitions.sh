@@ -30,13 +30,17 @@ show_as_error SCRIPT_DIR: $SCRIPT_DIR
 
 DATTO_HELPER="$SCRIPT_DIR/datto_snapshot_helper.sh"
 
+command_exists(){
+	which $1 > /dev/null 2>&1
+}
+
 check_required_commands(){
 	# Dattobd
-	which dbdctl || show_as_error_and_exit "Command 'dbdctl' not found! You must install it firsrt on backuped system (https://github.com/datto/dattobd)."
+	command_exists dbdctl || show_as_error_and_exit "Command 'dbdctl' not found! You must install it firsrt on backuped system (https://github.com/datto/dattobd)."
 	# Datto snapshot helper
 	[ -e $DATTO_HELPER ] || show_as_error_and_exit "Command '$DATTO_HELPER' not found or not executable!"
 	# Zip
-	which zip || show_as_error_and_exit "Command 'zip' not found!"
+	command_exists zip || show_as_error_and_exit "Command 'zip' not found!"
 }
 
 
@@ -86,7 +90,7 @@ prepare_pipes(){
 	for n in `part_nums`; do
 		local FIFO=`pipe_name_for_num $n`
 		mkfifo $FIFO
-		show_as_error `ls -l $FIFO`
+		show_as_error `ls $FIFO`
 	done
 }
 
