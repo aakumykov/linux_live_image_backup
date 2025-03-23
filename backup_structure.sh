@@ -37,6 +37,13 @@ part_names(){
 	all_blkids_of_working_disk | \grep -E ' UUID=' | \grep -vi swap | cut -d: -f1 | \grep -Eo '[^/]+$'
 }
 
+fail_on_no_program(){
+	show_as_error "============================="
+	show_as_error "$*"
+	show_as_error "============================="
+	exit 1
+}
+
 
 sfdisk_with_write_command(){
 cat << EOF
@@ -47,13 +54,13 @@ EOF
 
 
 if ! which zip > /dev/null; then
-	show_as_error Where is no \'zip\' executable!
+	fail_on_no_program "Where is no 'zip' executable!"
 	exit 1
 fi
 
 
 if ! which bsdtar > /dev/null; then
-	show_as_error Where is no \'bsdtar\' executable!
+	fail_on_no_program "Where is no 'bsdtar' executable!"
 	exit 1
 fi
 
