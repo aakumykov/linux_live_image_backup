@@ -40,7 +40,7 @@ part_names(){
 fail_on_no_program(){
 	show_as_error ""
 	show_as_error "============================="
-	show_as_error "$*"
+	show_as_error ERROR: "$*"
 	show_as_error "============================="
 	exit 1
 }
