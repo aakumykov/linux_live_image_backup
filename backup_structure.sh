@@ -56,13 +56,11 @@ EOF
 
 if ! which zip > /dev/null; then
 	fail_on_no_program "Where is no 'zip' executable!"
-	exit 1
 fi
 
 
 if ! which bsdtar > /dev/null; then
 	fail_on_no_program "Where is no 'bsdtar' executable!"
-	exit 1
 fi
 
 
