@@ -20,7 +20,10 @@ show_as_error(){
 
 
 show_as_error_and_exit(){
-	show_as_error "$*"
+	show_as_error ""
+	show_as_error "================================="
+	show_as_error "ERROR: $*"
+	show_as_error "================================="
 	exit 1
 }
 
