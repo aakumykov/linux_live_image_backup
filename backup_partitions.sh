@@ -1,4 +1,9 @@
 #!/bin/bash
+
+#                                                           #
+#           Не обрабатывает несмонтированные диски!         #
+#                                                           #
+
 set -e
 
 if [ $# -lt 1 ]; then
@@ -12,6 +17,11 @@ fi
 
 DISK=$1
 shift
+
+disk_name(){
+	echo $DISK | grep -Eo '[^/]+$'
+}
+DISK_NAME=`disk_name`
 
 
 show_as_error(){
@@ -33,6 +43,8 @@ show_as_error SCRIPT_DIR: $SCRIPT_DIR
 
 DATTO_HELPER="$SCRIPT_DIR/datto_snapshot_helper.sh"
 
+ZERO_FILLER="$SCRIPT_DIR/free_space_zero_filler.sh"
+
 command_exists(){
 	which $1 > /dev/null 2>&1
 }
@@ -42,6 +54,8 @@ check_required_commands(){
 	command_exists dbdctl || show_as_error_and_exit "Command 'dbdctl' not found! You must install it firsrt on backuped system (https://github.com/datto/dattobd)."
 	# Datto snapshot helper
 	[ -e $DATTO_HELPER ] || show_as_error_and_exit "Command '$DATTO_HELPER' not found or not executable!"
+	# Zero filler
+	[ -e $ZERO_FILLER ] || show_as_error_and_exit "Command '$ZERO_FILLER' not found ot not executable!"
 	# Zip
 	command_exists zip || show_as_error_and_exit "Command 'zip' not found!"
 }
@@ -96,6 +110,22 @@ prepare_pipes(){
 		show_as_error `ls $FIFO`
 	done
 }
+
+mount_points(){
+	mount | grep $DISK_NAME | awk '{print $3}'
+}
+
+random_name(){
+	tempfile | grep -Eo '[^/]+$'
+}
+
+fill_free_space_with_zero(){
+	for mp in `mount_points`; do
+		$ZERO_FILLER $mp
+	done
+}
+
+fill_free_space_with_zero
 
 
 prepare_pipes
