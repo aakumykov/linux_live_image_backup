@@ -111,6 +111,13 @@ prepare_pipes(){
 	done
 }
 
+prepare_dumps(){
+	for n in `part_nums`; do
+		local PIPE_NAME=`pipe_name_for_num $n`
+		dd if=/dev/datto$n bs=1M of=$PIPE_NAME &
+	done
+}
+
 mount_points(){
 	mount | grep $DISK_NAME | awk '{print $3}'
 }
@@ -125,27 +132,26 @@ fill_free_space_with_zero(){
 	done
 }
 
-fill_free_space_with_zero
-
-
-prepare_pipes
-
 #
-# Сделать этот скрипт реагирующим на аргумент
+# Перед заполнением раздела нулями обязательно удалять существующие устройства /dev/datto*,
+# вызывать ошибку, если этого не получилось, так как создание большого файла при активном datto-устройстве приведёт к ошибке.
 #
 show_as_error "Removing old Dattobd devices if exits..."
 $DATTO_HELPER remove
 
+$DATTO_HELPER exists && show_as_error_and_exit "Cannot continue bacause some /dev/datto* devices was not removed."
+
+fill_free_space_with_zero
+
+
+#
+# Сделать этот скрипт реагирующим на аргумент...
+#
 show_as_error "Creating Dattobd snapshot devices..."
 $DATTO_HELPER create
 
 
-prepare_dumps(){
-	for n in `part_nums`; do
-		local PIPE_NAME=`pipe_name_for_num $n`
-		dd if=/dev/datto$n bs=1M of=$PIPE_NAME &
-	done
-}
+prepare_pipes
 
 prepare_dumps
 
