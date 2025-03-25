@@ -159,7 +159,7 @@ cd $TEMP_DIR
 show_as_error "WORKING_DIR: `pwd`"
 
 show_as_error "Zipping partitions data..."
-zip -q -FI -r - . > /dev/stdout
+zip -q -fz -FI -r - . > /dev/stdout
 
 
 show_as_error "Removing /dev/datto* devices..."
