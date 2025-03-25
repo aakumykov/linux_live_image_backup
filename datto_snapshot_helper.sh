@@ -1,11 +1,13 @@
 #!/bin/bash
+set -e
+
 
 show_as_error(){
 	echo $* > /dev/stderr
 }
 
 show_usage_and_exit(){
-	show_as_error "Usage: $0 <create|remove|list>"
+	show_as_error "Usage: $0 <create|remove|list|exists>"
 	exit 1
 }
 
@@ -14,12 +16,25 @@ field_of(){
 }
 
 some_snapshots_exists(){
+	set +f
 	ls -1 /dev/datto* | grep -E 'datto[0-9]+' > /dev/null
+	local RES=$?
+	set -f
+	return $RES
 }
 
 show_error_and_exit(){
 	show_as_error "$*"
 	exit 1
+}
+
+list_existing_datto_devices(){
+	set +f
+	show_as_error "Existing datto-devices:"
+	for i in `ls -1 /dev/datto*`; do
+		show_as_error $i
+	done
+	set -f
 }
 
 
@@ -29,22 +44,27 @@ CMD=$1
 #
 # Работа
 #
-if [ "create" == "$CMD" ] && some_snapshots_exists; then
-cat << EOF > /dev/stderr
-Some snapshots already exists. Cannot create its again.
-Existing snapshot devices:
-`ls -1 /dev/datto*`
+if [ "create" == "$CMD" ]; then
+	show_as_error "CMD is 'create', checking if some snapshots exists..."
 
-EOF
-exit 1
+	if some_snapshots_exists; then
+		cat <<- EOF > /dev/stderr
+		Some snapshots already exists. Cannot create its again.
+		`list_existing_datto_devices`
+		EOF
+		exit 1
+	fi
 fi
+
 
 
 OLD_IFS=$IFS
 IFS=$'\n'
-set -f # Disable globbing.
+set -f # Disable globbing (!)
+
 
 for i in `mount | grep /dev/sda | sort`; do
+
 	PART_FILE=`field_of "$i" ' ' 1`
 	PART_NUM=`echo $PART_FILE | grep -Eo '[0-9]+$'`
 	MOUNT_POINT=`field_of "$i" ' ' 3`
@@ -62,6 +82,9 @@ for i in `mount | grep /dev/sda | sort`; do
 				show_as_error "Removing '$DEVICE'"
 				dbdctl destroy $PART_NUM 
 			}
+			;;
+		exists)
+			some_snapshots_exists
 			;;
 		list)
 			ls -l /dev/datto$PART_NUM
