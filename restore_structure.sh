@@ -12,9 +12,31 @@ show_as_error(){
 	echo $* > /dev/stderr 
 }
 
+show_as_error_and_exit(){
+	show_as_error ""
+	show_as_error "=================================="
+	show_as_error "$*"
+	show_as_error "=================================="
+	exit 1
+}
+
+command_exists(){
+	which $1 > /dev/null 2>&1
+}
+
+check_required_commands(){
+	for i in buffer sfdisk bsdtar tee; do
+		command_exists $i || show_as_error_and_exit "Command '$i' not found, cannot work!"
+	done
+}
+
+check_required_commands
+
+
 kill_if_runs(){ 
 	ps -p $1 > /dev/null && kill $1 
 }
+
 
 SWAP_LOG=swap.log
 
