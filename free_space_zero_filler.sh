@@ -18,6 +18,10 @@ show_as_error_and_exit(){
 	exit 1
 }
 
+temp_name(){
+	tempfile | grep -Eo '[^/]+$'
+}
+
 DIR=$1
 shift
 
@@ -33,43 +37,38 @@ FREE_SPACE=$(( `free_space_in_dir $DIR` + 0 ))
 
 
 if [ $FREE_SPACE -lt $SAFE_FREE_SPACE ]; then
-	show_as_error_and_exit "Free space in '$DIR' (${FREE_SPACE} bytes) is lower than ${SAFE_FREE_SPACE} bytes. Will not fill with zero."
+	show_as_error "Free space in '$DIR' (${FREE_SPACE} bytes) is lower than ${SAFE_FREE_SPACE} bytes. Will not fill with zero."
+else
+	ZERO_FILE="$DIR/ZERO_`temp_name`"
+	ZERO_FILE=`echo $ZERO_FILE | sed -E 's/[/]+/\//g'`
+	#show_as_error ZERO_FILE: $ZERO_FILE
+
+	ZERO_SIZE=$(( $FREE_SPACE - $SAFE_FREE_SPACE ))
+	#show_as_error ZERO_SIZE: $ZERO_SIZE
+
+	ZERO_BLOCK_SIZE=2048
+
+	ITERATIONS=$(( ZERO_SIZE / $ZERO_BLOCK_SIZE ))
+	#show_as_error ITERATIONS: $ITERATIONS
+
+
+
+	show_as_error "Partition mounted to '$DIR' has ${FREE_SPACE} bytes free space. File '$ZERO_FILE' with size ${ZERO_SIZE} bytes will be created on it and then removed."
+
+
+
+	show_as_error "Filling $DIR with zeroes by creating '$ZERO_FILE' ..."
+	dd if=/dev/zero bs=${ZERO_BLOCK_SIZE}k count=$ITERATIONS of=$ZERO_FILE 2>/dev/null 1>&2
+
+
+	show_as_error "Flushing changes to disk ..."
+	sync
+
+
+	show_as_error "Deleting zero file '$ZERO_FILE' ..."
+	rm -f $ZERO_FILE
+
+
+	show_as_error "=Done filling space with zero="
 fi
-
-temp_name(){
-	tempfile | grep -Eo '[^/]+$'
-}
-
-
-ZERO_FILE="$DIR/ZERO_`temp_name`"
-ZERO_FILE=`echo $ZERO_FILE | sed -E 's/[/]+/\//g'`
-#show_as_error ZERO_FILE: $ZERO_FILE
-
-ZERO_SIZE=$(( $FREE_SPACE - $SAFE_FREE_SPACE ))
-#show_as_error ZERO_SIZE: $ZERO_SIZE
-
-ZERO_BLOCK_SIZE=2048
-
-ITERATIONS=$(( ZERO_SIZE / $ZERO_BLOCK_SIZE ))
-#show_as_error ITERATIONS: $ITERATIONS
-
-
-
-show_as_error "Partition mounted to '$DIR' has ${FREE_SPACE} bytes free space. File '$ZERO_FILE' with size ${ZERO_SIZE} bytes will be created on it and then removed."
-
-
-
-show_as_error "Filling $DIR with zeroes by creating '$ZERO_FILE' ..."
-dd if=/dev/zero bs=${ZERO_BLOCK_SIZE}k count=$ITERATIONS of=$ZERO_FILE 2>/dev/null 1>&2
-
-
-show_as_error "Flushing changes to disk ..."
-sync
-
-
-show_as_error "Deleting zero file '$ZERO_FILE' ..."
-rm -f $ZERO_FILE
-
-
-show_as_error "=Done filling space with zero="
 
