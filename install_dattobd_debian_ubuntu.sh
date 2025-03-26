@@ -5,7 +5,7 @@ if !(which gpg > /dev/null) && !(which gpg2 > /dev/null); then
 	exit 1
 fi
 
-which dirmngr || {
+which dirmngr > /dev/null || {
 	echo "dirmngr command required but not found!" > /dev/stderr
 	exit 1
 }
