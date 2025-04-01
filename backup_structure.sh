@@ -68,7 +68,6 @@ DISK=$1
 shift
 
 show_as_error ""
-show_as_error ""
 show_as_error "=================================="
 show_as_error "Backing up $DISK structure"
 show_as_error "=================================="

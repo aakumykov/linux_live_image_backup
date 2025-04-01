@@ -24,7 +24,6 @@ shift
 
 
 show_as_error ""
-show_as_error ""
 show_as_error "================================================="
 show_as_error "Backuing up $DISK image"
 show_as_error "================================================="
