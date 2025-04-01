@@ -64,7 +64,7 @@ list_existing_datto_devices(){
 # Работа
 #
 if [ "create" == "$CMD" ]; then
-	show_as_error "CMD is 'create', checking if some snapshots exists..."
+	#show_as_error "CMD is 'create', checking if some snapshots exists..."
 
 	if some_snapshots_exists; then
 		cat <<- EOF > /dev/stderr
@@ -84,8 +84,8 @@ set -f # Disable globbing (!)
 
 for i in `mount | grep $DISK | sort`; do
 
-	PART_FILE=`field_of "$i" ' ' 1`
-	PART_NUM=`echo $PART_FILE | grep -Eo '[0-9]+$'`
+	PARTITION=`field_of "$i" ' ' 1`
+	PART_NUM=`echo $PARTITION | grep -Eo '[0-9]+$'`
 	MOUNT_POINT=`field_of "$i" ' ' 3`
 	FILE_SYSTEM=`field_of "$i" ' ' 5`
 
@@ -93,12 +93,12 @@ for i in `mount | grep $DISK | sort`; do
 
 	case $CMD in
 		create)
-			show_as_error "Creating '$DEVICE'"
-			dbdctl setup-snapshot $PART_FILE $MOUNT_POINT/.datto$PART_NUM $PART_NUM
+			show_as_error "Creating snapshot devicee '$DEVICE' for '$PARTITION'"
+			dbdctl setup-snapshot $PARTITION $MOUNT_POINT/.datto$PART_NUM $PART_NUM
 			;;
 		remove)
 			[ -b $DEVICE ] && { 
-				show_as_error "Removing '$DEVICE'"
+				show_as_error "Removing '$DEVICE' snapshot device"
 				dbdctl destroy $PART_NUM 
 			}
 			;;
