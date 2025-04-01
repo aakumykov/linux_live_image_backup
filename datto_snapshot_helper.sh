@@ -7,7 +7,7 @@ set -e
 
 show_usage_and_exit(){
 	cat <<- EOF > /dev/stderr
-	Usage: $0 <create|remove|list> <disk>
+	Usage: $0 <exists|create|remove|list> <disk>
 	Example: $0 create /dev/sda - will create Dattobd snapshots for partitions on /dev/sda (/dev/sda1, /dev/sda2 etc)
 	EOF
 	exit 1
@@ -25,11 +25,11 @@ fi
 
 CMD=$1
 shift
-show_as_error CMD: $CMD
+#show_as_error CMD: $CMD
 
 DISK=$1
 shift
-show_as_error DISK: $DISK
+#show_as_error DISK: $DISK
 
 
 field_of(){
