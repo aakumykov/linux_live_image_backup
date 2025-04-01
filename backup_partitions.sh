@@ -137,9 +137,9 @@ fill_free_space_with_zero(){
 # вызывать ошибку, если этого не получилось, так как создание большого файла при активном datto-устройстве приведёт к ошибке.
 #
 show_as_error "Removing old Dattobd devices if exits..."
-$DATTO_HELPER remove
+$DATTO_HELPER remove $DISK
 
-$DATTO_HELPER exists && show_as_error_and_exit "Cannot continue bacause some /dev/datto* devices was not removed."
+$DATTO_HELPER exists $DISK && show_as_error_and_exit "Cannot continue bacause some /dev/datto* devices was not removed."
 
 fill_free_space_with_zero
 
@@ -148,7 +148,7 @@ fill_free_space_with_zero
 # Сделать этот скрипт реагирующим на аргумент...
 #
 show_as_error "Creating Dattobd snapshot devices..."
-$DATTO_HELPER create
+$DATTO_HELPER create $DISK
 
 
 prepare_pipes
@@ -163,5 +163,5 @@ zip -q -fz -FI -r - . > /dev/stdout
 
 
 show_as_error "Removing /dev/datto* devices..."
-$DATTO_HELPER remove
+$DATTO_HELPER remove $DISK
 show_as_error "Done"
