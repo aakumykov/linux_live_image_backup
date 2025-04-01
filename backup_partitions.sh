@@ -18,6 +18,13 @@ fi
 DISK=$1
 shift
 
+show_as_error ""
+show_as_error ""
+show_as_error "==============================================================="
+show_as_error "Backing up $DISK" image
+show_as_error "==============================================================="
+
+
 disk_name(){
 	echo $DISK | grep -Eo '[^/]+$'
 }
