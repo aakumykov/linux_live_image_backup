@@ -1,15 +1,36 @@
 #!/bin/bash
 set -e
 
+#
+# FIXME: Если диск не содержит разделов, а отформатирован напрямую?
+#
+
+show_usage_and_exit(){
+	cat <<- EOF > /dev/stderr
+	Usage: $0 <create|remove|list> <disk>
+	Example: $0 create /dev/sda - will create Dattobd snapshots for partitions on /dev/sda (/dev/sda1, /dev/sda2 etc)
+	EOF
+	exit 1
+}
 
 show_as_error(){
 	echo $* > /dev/stderr
 }
 
-show_usage_and_exit(){
-	show_as_error "Usage: $0 <create|remove|list|exists>"
-	exit 1
-}
+
+if [ $# -lt 2 ]; then
+	show_usage_and_exit
+fi
+
+
+CMD=$1
+shift
+show_as_error CMD: $CMD
+
+DISK=$1
+shift
+show_as_error DISK: $DISK
+
 
 field_of(){
 	echo "$1" | cut -d$2 -f $3
@@ -38,8 +59,6 @@ list_existing_datto_devices(){
 }
 
 
-CMD=$1
-
 
 #
 # Работа
@@ -63,7 +82,7 @@ IFS=$'\n'
 set -f # Disable globbing (!)
 
 
-for i in `mount | grep /dev/sda | sort`; do
+for i in `mount | grep $DISK | sort`; do
 
 	PART_FILE=`field_of "$i" ' ' 1`
 	PART_NUM=`echo $PART_FILE | grep -Eo '[0-9]+$'`
