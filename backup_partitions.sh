@@ -3,7 +3,6 @@
 #                                                           #
 #           Не обрабатывает несмонтированные диски!         #
 #                                                           #
-
 set -e
 
 if [ $# -lt 1 ]; then
@@ -15,8 +14,14 @@ if [ $# -lt 1 ]; then
 fi
 
 
+show_as_error(){
+	echo "$*" > /dev/stderr
+}
+
+
 DISK=$1
 shift
+
 
 show_as_error ""
 show_as_error ""
@@ -29,11 +34,6 @@ disk_name(){
 	echo $DISK | grep -Eo '[^/]+$'
 }
 DISK_NAME=`disk_name`
-
-
-show_as_error(){
-	echo "$*" > /dev/stderr
-}
 
 
 show_as_error_and_exit(){
